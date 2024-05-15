@@ -1,0 +1,23 @@
+/* Стили для ленты */
+.tape {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    background-color: #f0f0f0;
+  }
+  
+  .tape-cell {
+    width: 50px;
+    height: 50px;
+    border: 1px solid #ccc;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5rem;
+  }
+  
+  /* Стили для выделения текущей позиции головки */
+  .head-position {
+    background-color: #007bff;
+    color: #fff;
+  }

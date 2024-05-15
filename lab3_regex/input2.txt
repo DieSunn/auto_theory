@@ -1,0 +1,27 @@
+-- Пример кода на Haskell с комментариями
+
+{- Функция для вычисления факториала
+   Принимает целое число и возвращает его факториал -}
+factorial :: Integer -> Integer
+factorial 0 = 1
+factorial n = n * factorial (n - 1)
+
+{- Функция для вычисления суммы списка
+   Принимает список целых чисел и возвращает их сумму -}
+sumList :: [Integer] -> Integer
+sumList [] = 0
+sumList (x:xs) = x + sumList xs
+
+main :: IO ()
+main = do
+    {- Вывод сообщения о запуске программы -}
+    putStrLn "Пример кода на Haskell с комментариями"
+    
+    {- Вычисление факториала числа 5 и вывод результата -}
+    let fact = factorial 5
+    putStrLn $ "Факториал 5: " ++ show fact
+    
+    {- Вычисление суммы списка и вывод результата -}
+    let numbers = [1, 2, 3, 4, 5]
+    let sum = sumList numbers
+    putStrLn $ "Сумма чисел: " ++ show sum

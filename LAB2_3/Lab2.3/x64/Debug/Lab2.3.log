@@ -1,0 +1,8 @@
+﻿  Lab2.3.cpp
+F:\прога\Универ\автоматы\лабы\georgy_purtov2022\theory_auto\LAB2_3\Lib\FormalLanguage.h(123,1): warning C4267: аргумент: преобразование из "size_t" в "_Ty"; возможна потеря данных
+          with
+          [
+              _Ty=int
+          ]
+F:\прога\Универ\автоматы\лабы\georgy_purtov2022\theory_auto\LAB2_3\Lib\FormalLanguage.h(176,1): warning C4267: инициализация: преобразование из "size_t" в "int"; возможна потеря данных
+  Lab2.3.vcxproj -> F:\прога\Универ\автоматы\лабы\georgy_purtov2022\theory_auto\LAB2_3\Lab2.3\x64\Debug\Lab2.3.exe
