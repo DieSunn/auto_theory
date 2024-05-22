@@ -1,0 +1,3 @@
+C:\Users\budae\Desktop\Учебка\6 семестр\Теория автоматов\1 лабораторная\1lab\x64\Debug\1lab.exe
+C:\Users\User\Desktop\Teoria_avtomatov\1 лабораторная\1lab\x64\Debug\1lab.exe
+F:\прога\Универ\автоматы\лабы\auto_theory\1lab\x64\Debug\1lab.exe

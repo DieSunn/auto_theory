@@ -9,3 +9,14 @@ F:\прога\Универ\автоматы\лабы\georgy_purtov2022\theory_au
 F:\прога\Универ\автоматы\лабы\georgy_purtov2022\theory_auto\Lab4_turing\5_1_laboratornaya\5.1 лабораторная\obj\Debug\Lab5_1.csproj.CoreCompileInputs.cache
 F:\прога\Универ\автоматы\лабы\georgy_purtov2022\theory_auto\Lab4_turing\5_1_laboratornaya\5.1 лабораторная\obj\Debug\Lab5_TuringMachineGUI_v1.exe
 F:\прога\Универ\автоматы\лабы\georgy_purtov2022\theory_auto\Lab4_turing\5_1_laboratornaya\5.1 лабораторная\obj\Debug\Lab5_TuringMachineGUI_v1.pdb
+F:\прога\Универ\автоматы\лабы\auto_theory\Lab4_turing\5_1_laboratornaya\5.1 лабораторная\bin\Debug\Lab5_TuringMachineGUI_v1.exe.config
+F:\прога\Универ\автоматы\лабы\auto_theory\Lab4_turing\5_1_laboratornaya\5.1 лабораторная\bin\Debug\Lab5_TuringMachineGUI_v1.exe
+F:\прога\Универ\автоматы\лабы\auto_theory\Lab4_turing\5_1_laboratornaya\5.1 лабораторная\bin\Debug\Lab5_TuringMachineGUI_v1.pdb
+F:\прога\Универ\автоматы\лабы\auto_theory\Lab4_turing\5_1_laboratornaya\5.1 лабораторная\obj\Debug\Lab5_1.csproj.AssemblyReference.cache
+F:\прога\Универ\автоматы\лабы\auto_theory\Lab4_turing\5_1_laboratornaya\5.1 лабораторная\obj\Debug\Lab5_1.csproj.SuggestedBindingRedirects.cache
+F:\прога\Универ\автоматы\лабы\auto_theory\Lab4_turing\5_1_laboratornaya\5.1 лабораторная\obj\Debug\Lab5_TuringMachineGUI_v1.Form1.resources
+F:\прога\Универ\автоматы\лабы\auto_theory\Lab4_turing\5_1_laboratornaya\5.1 лабораторная\obj\Debug\Lab5_TuringMachineGUI_v1.Properties.Resources.resources
+F:\прога\Универ\автоматы\лабы\auto_theory\Lab4_turing\5_1_laboratornaya\5.1 лабораторная\obj\Debug\Lab5_1.csproj.GenerateResource.cache
+F:\прога\Универ\автоматы\лабы\auto_theory\Lab4_turing\5_1_laboratornaya\5.1 лабораторная\obj\Debug\Lab5_1.csproj.CoreCompileInputs.cache
+F:\прога\Универ\автоматы\лабы\auto_theory\Lab4_turing\5_1_laboratornaya\5.1 лабораторная\obj\Debug\Lab5_TuringMachineGUI_v1.exe
+F:\прога\Универ\автоматы\лабы\auto_theory\Lab4_turing\5_1_laboratornaya\5.1 лабораторная\obj\Debug\Lab5_TuringMachineGUI_v1.pdb

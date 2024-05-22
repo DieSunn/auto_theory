@@ -1,0 +1,33 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32602.215
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "1lab", "1lab.vcxproj", "{4B0BFC61-35B2-491D-B6F6-691EE6F75922}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Элементы решения", "Элементы решения", "{EC357D95-29C5-45DE-8582-F094FAC401CF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4B0BFC61-35B2-491D-B6F6-691EE6F75922}.Debug|x64.ActiveCfg = Debug|x64
+		{4B0BFC61-35B2-491D-B6F6-691EE6F75922}.Debug|x64.Build.0 = Debug|x64
+		{4B0BFC61-35B2-491D-B6F6-691EE6F75922}.Debug|x86.ActiveCfg = Debug|Win32
+		{4B0BFC61-35B2-491D-B6F6-691EE6F75922}.Debug|x86.Build.0 = Debug|Win32
+		{4B0BFC61-35B2-491D-B6F6-691EE6F75922}.Release|x64.ActiveCfg = Release|x64
+		{4B0BFC61-35B2-491D-B6F6-691EE6F75922}.Release|x64.Build.0 = Release|x64
+		{4B0BFC61-35B2-491D-B6F6-691EE6F75922}.Release|x86.ActiveCfg = Release|Win32
+		{4B0BFC61-35B2-491D-B6F6-691EE6F75922}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {7CAC4CD5-4537-4A25-9141-A959FCC59790}
+	EndGlobalSection
+EndGlobal

@@ -167,7 +167,7 @@ namespace Lab5_TuringMachineGUI_v1
 
             ProcessStartInfo startInfo = new ProcessStartInfo
             {
-                FileName = "state_graph.dot",
+                FileName = "dot",
                 Arguments = $"-Tpng {dotFilePath} -o state_graph.png",
                 CreateNoWindow = true,
                 UseShellExecute = false

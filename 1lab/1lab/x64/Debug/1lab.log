@@ -1,0 +1,16 @@
+﻿  1lab.cpp
+C:\Users\budae\Desktop\Учебка\6 семестр\Теория автоматов\4 лабораторная\1lab\1lab.cpp(62,27): warning C4018: <: несоответствие типов со знаком и без знака
+C:\Users\budae\Desktop\Учебка\6 семестр\Теория автоматов\4 лабораторная\1lab\1lab.cpp(213,22): warning C4018: <: несоответствие типов со знаком и без знака
+C:\Users\budae\Desktop\Учебка\6 семестр\Теория автоматов\4 лабораторная\1lab\1lab.cpp(250,22): warning C4018: <: несоответствие типов со знаком и без знака
+C:\Users\budae\Desktop\Учебка\6 семестр\Теория автоматов\4 лабораторная\1lab\1lab.cpp(282,66): warning C4267: аргумент: преобразование из "size_t" в "_Ty"; возможна потеря данных
+C:\Users\budae\Desktop\Учебка\6 семестр\Теория автоматов\4 лабораторная\1lab\1lab.cpp(282,66): warning C4267:         with
+C:\Users\budae\Desktop\Учебка\6 семестр\Теория автоматов\4 лабораторная\1lab\1lab.cpp(282,66): warning C4267:         [
+C:\Users\budae\Desktop\Учебка\6 семестр\Теория автоматов\4 лабораторная\1lab\1lab.cpp(282,66): warning C4267:             _Ty=int
+C:\Users\budae\Desktop\Учебка\6 семестр\Теория автоматов\4 лабораторная\1lab\1lab.cpp(282,66): warning C4267:         ]
+C:\Users\budae\Desktop\Учебка\6 семестр\Теория автоматов\4 лабораторная\1lab\1lab.cpp(301,22): warning C4018: <: несоответствие типов со знаком и без знака
+C:\Users\budae\Desktop\Учебка\6 семестр\Теория автоматов\4 лабораторная\1lab\1lab.cpp(333,66): warning C4267: аргумент: преобразование из "size_t" в "_Ty"; возможна потеря данных
+C:\Users\budae\Desktop\Учебка\6 семестр\Теория автоматов\4 лабораторная\1lab\1lab.cpp(333,66): warning C4267:         with
+C:\Users\budae\Desktop\Учебка\6 семестр\Теория автоматов\4 лабораторная\1lab\1lab.cpp(333,66): warning C4267:         [
+C:\Users\budae\Desktop\Учебка\6 семестр\Теория автоматов\4 лабораторная\1lab\1lab.cpp(333,66): warning C4267:             _Ty=int
+C:\Users\budae\Desktop\Учебка\6 семестр\Теория автоматов\4 лабораторная\1lab\1lab.cpp(333,66): warning C4267:         ]
+  1lab.vcxproj -> C:\Users\budae\Desktop\Учебка\6 семестр\Теория автоматов\4 лабораторная\1lab\x64\Debug\1lab.exe
