@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Petri Net Simulation</title>
+  <style>
+    canvas {
+      background-color: #f9f9f9;
+      display: block;
+      margin: 20px auto;
+      border: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="petriNetCanvas" width="600" height="400"></canvas>
+  <script>
+    // Класс для узлов сети Петри
+    class Place {
+      constructor(name, tokens = 0) {
+        this.name = name;
+        this.tokens = tokens;
+      }
+      addTokens(count = 1) {
+        this.tokens += count;
+      }
+      removeTokens(count = 1) {
+        if (this.tokens >= count) {
+          this.tokens -= count;
+        }
+      }
+    }
+
+    // Класс для сети Петри
+    class PetriNet {
+      constructor() {
+        this.places = {};
+      }
+      addPlace(name, tokens = 0) {
+        this.places[name] = new Place(name, tokens);
+      }
+    }
+
+    // Инициализация сети Петри
+    const petriNet = new PetriNet();
+    petriNet.addPlace("queue", 0);
+    petriNet.addPlace("processor", 0);
+    petriNet.addPlace("completed", 0);
+    petriNet.addPlace("rejected", 0);
+
+    // Позиции узлов
+    const positions = {
+      queue: [100, 200],
+      processor: [300, 200],
+      completed: [500, 150],
+      rejected: [500, 250],
+    };
+
+    const queueLimit = 10; // Лимит очереди
+    let processingTime = 0; // Таймер обработки
+
+    // Анимация
+    const canvas = document.getElementById("petriNetCanvas");
+    const ctx = canvas.getContext("2d");
+
+    function drawTransitions(ctx) {
+      const edges = [
+        ["queue", "processor"],
+        ["processor", "completed"],
+        ["queue", "rejected"],
+      ];
+      ctx.strokeStyle = "black";
+      ctx.lineWidth = 2;
+
+      edges.forEach(([start, end]) => {
+        const [x1, y1] = positions[start];
+        const [x2, y2] = positions[end];
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+      });
+    }
+
+    function drawGraph() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawTransitions(ctx);
+
+      Object.keys(positions).forEach((placeName) => {
+        const [x, y] = positions[placeName];
+        ctx.beginPath();
+        ctx.arc(x, y, 30, 0, Math.PI * 2);
+        ctx.fillStyle = "lightblue";
+        ctx.fill();
+        ctx.stroke();
+
+        // Подпись с названием узла и количеством токенов
+        ctx.fillStyle = "black";
+        ctx.font = "14px Arial";
+        ctx.fillText(`${placeName}: ${petriNet.places[placeName].tokens}`, x - 40, y + 5);
+      });
+    }
+
+    function updateTokens() {
+      // Генерация заявок с неравномерным пополнением
+      if (Math.random() < 0.3) { 
+        if (petriNet.places["queue"].tokens < queueLimit) {
+          petriNet.places["queue"].addTokens(Math.floor(Math.random() * 3) + 1);
+        } else {
+          petriNet.places["rejected"].addTokens(1); // Отправляем в "Отброшенные заявки"
+        }
+      }
+
+      // Обработка заявок процессором
+      if (petriNet.places["processor"].tokens === 0 && petriNet.places["queue"].tokens > 0) {
+        petriNet.places["queue"].removeTokens();
+        petriNet.places["processor"].addTokens();
+        processingTime = Math.floor(Math.random() * 5) + 3; // Случайное время обработки от 3 до 7
+      }
+
+      // Завершение обработки
+      if (processingTime > 0) {
+        processingTime -= 1;
+        if (processingTime === 0) {
+          petriNet.places["processor"].removeTokens();
+          petriNet.places["completed"].addTokens();
+        }
+      }
+    }
+
+    function animate() {
+      updateTokens();
+      drawGraph();
+
+    }
+    setInterval(animate, 500);
+    // Запуск анимации
+    animate();
+  </script>
+</body>
+</html>
