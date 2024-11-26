@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Petri Net Animation with Input</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.24.0/cytoscape.min.js"></script>
+    <style>
+        #cy {
+            width: 100%;
+            height: 600px;
+            border: 1px solid black;
+        }
+        button, input {
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Сеть Петри для проверки чётности единиц</h1>
+    <label for="inputString">Введите двоичную строку (например, 101R):</label>
+    <input type="text" id="inputString" placeholder="101R">
+    <button onclick="initialize()">Инициализировать</button>
+    <div id="cy"></div>
+    <p id="result"></p>
+
+    <script>
+        class PetriNet {
+            constructor(inputString) {
+                // Инициализация состояний
+                this.places = { q1: 1, q2: 0, output: 0 };
+                this.transitions = [
+                    { id: 't01', inputs: ['q1'], outputs: ['q1'], symbol: '0' },
+                    { id: 't11', inputs: ['q1'], outputs: ['q2'], symbol: '1' },
+                    { id: 't02', inputs: ['q2'], outputs: ['q2'], symbol: '0' },
+                    { id: 't12', inputs: ['q2'], outputs: ['q1'], symbol: '1' },
+                    { id: 'tR1', inputs: ['q1'], outputs: ['output'], symbol: 'R', output: 1 },
+                    { id: 'tR2', inputs: ['q2'], outputs: ['output'], symbol: 'R', output: 0 },
+                ];
+                this.inputString = inputString;
+                this.currentSymbolIndex = 0;
+                this.tokenPosition = 'q1';  // Начальная позиция токена
+                this.onesCount = 0;  // Подсчёт единиц
+            }
+
+            step() {
+                const currentSymbol = this.inputString[this.currentSymbolIndex++];
+                for (const transition of this.transitions) {
+                    if (
+                        transition.symbol === currentSymbol &&
+                        transition.inputs.every((place) => this.places[place] > 0)
+                    ) {
+                        // Удаляем фишки из входных мест
+                        transition.inputs.forEach((place) => this.places[place]--);
+                        // Добавляем фишки в выходные места
+                        transition.outputs.forEach((place) => this.places[place]++);
+                        
+                        // Если встретили единицу, увеличиваем счётчик
+                        if (currentSymbol === '1') {
+                            this.onesCount++;
+                        }
+
+                        return transition;  // Возвращаем переход, который был выполнен
+                    }
+                }
+                return null;
+            }
+
+            getOutput() {
+                // Определяем результат по чётности
+                return this.onesCount % 2 === 0 ? 'Чётное' : 'Нечётное';
+            }
+        }
+
+        // Инициализация визуализации
+        let petriNet = null;
+        let autoStepInterval = null;
+
+        const cy = cytoscape({
+            container: document.getElementById('cy'),
+            style: [
+                {
+                    selector: 'node',
+                    style: {
+                        'background-color': '#61bffc',
+                        'label': 'data(label)',
+                        'text-valign': 'center',
+                        'color': 'black',
+                        'font-size': '14px',
+                        'shape': 'ellipse',
+                    },
+                },
+                {
+                    selector: '.transition',
+                    style: {
+                        'background-color': '#ff6b6b',
+                        'shape': 'rectangle',
+                    },
+                },
+                {
+                    selector: 'edge',
+                    style: {
+                        'width': 2,
+                        'line-color': '#ccc',
+                        'target-arrow-color': '#ccc',
+                        'target-arrow-shape': 'triangle',
+                        'curve-style': 'bezier',
+                    },
+                },
+            ],
+        });
+
+
+// Инициализация графа
+function initialize() {
+    const input = document.getElementById('inputString').value.trim();
+    if (!input || !/^[01R]+$/.test(input)) {
+        alert("Введите корректную двоичную строку с символами 0, 1 и R.");
+        return;
+    }
+
+    // Сбрасываем состояние
+    petriNet = new PetriNet(input);
+    cy.elements().remove();
+    cy.add([
+        { data: { id: 'q1', label: 'q1 (1)' }, position: { x: 100, y: 100 } },
+        { data: { id: 'q2', label: 'q2 (0)' }, position: { x: 100, y: 300 } },
+        { data: { id: 'output', label: 'output' }, position: { x: 300, y: 200 } },
+        { data: { id: 't01', label: 't01' }, classes: 'transition', position: { x: 100, y: 50 } },
+        { data: { id: 't11', label: 't11' }, classes: 'transition', position: { x: 200, y: 150 } },
+        { data: { id: 't02', label: 't02' }, classes: 'transition', position: { x: 100, y: 300 } },
+        { data: { id: 't12', label: 't12' }, classes: 'transition', position: { x: 200, y: 350 } },
+        { data: { id: 'tR1', label: 'tR1' }, classes: 'transition', position: { x: 400, y: 150 } },
+        { data: { id: 'tR2', label: 'tR2' }, classes: 'transition', position: { x: 400, y: 250 } },
+        { data: { source: 'q1', target: 't01' } },
+        { data: { source: 't01', target: 'q1' } },
+        { data: { source: 'q1', target: 't11' } },
+        { data: { source: 't11', target: 'q2' } },
+        { data: { source: 'q2', target: 't02' } },
+        { data: { source: 't02', target: 'q2' } },
+        { data: { source: 'q2', target: 't12' } },
+        { data: { source: 't12', target: 'q1' } },
+        { data: { source: 'q1', target: 'tR1' } },
+        { data: { source: 'tR1', target: 'output' } },
+        { data: { source: 'q2', target: 'tR2' } },
+        { data: { source: 'tR2', target: 'output' } },
+    ]);
+
+    // Устанавливаем позиции вручную
+    cy.batch(() => {
+        cy.getElementById('q1').position({ x: 500, y: 200 });
+        cy.getElementById('q2').position({ x: 500, y: 400 });
+        cy.getElementById('output').position({ x: 900, y: 300 });
+        cy.getElementById('t01').position({ x: 500, y: 100 });
+        cy.getElementById('t11').position({ x: 550, y: 300 });
+        cy.getElementById('t02').position({ x: 500, y: 500 });
+        cy.getElementById('t12').position({ x: 450, y: 300 });
+        cy.getElementById('tR1').position({ x: 700, y: 200 });
+        cy.getElementById('tR2').position({ x: 700, y: 400 });
+    });
+
+    // Обновляем метки
+    updatePlaces();
+
+    // Останавливаем и запускаем автоматический шаг
+    clearInterval(autoStepInterval);
+    autoStepInterval = setInterval(step, 2000);
+}
+
+        // Обновление состояний узлов
+        function updatePlaces() {
+            Object.keys(petriNet.places).forEach((place) => {
+                const tokenCount = petriNet.places[place];
+                const label = `${place} (${tokenCount})`;
+                cy.getElementById(place).data('label', label);
+            });
+        }
+
+        // Подсветка узлов
+        function highlightNode(nodeId) {
+            const node = cy.getElementById(nodeId);
+            node.style('background-color', '#66ff66'); // Зелёный
+            setTimeout(() => {
+                node.style('background-color', '#61bffc'); // Возврат к исходному цвету
+            }, 500);
+        }
+
+        // Выполнение шага
+        function step() {
+            if (!petriNet) {
+                alert("Сначала инициализируйте сеть Петри!");
+                return;
+            }
+
+            if (petriNet.currentSymbolIndex >= petriNet.inputString.length) {
+                clearInterval(autoStepInterval); // Останавливаем автоматический шаг
+                alert("Входная строка завершена.");
+                return;
+            }
+
+            const transition = petriNet.step();
+            if (transition) {
+                // Подсветка входных и выходных мест
+                transition.inputs.forEach(highlightNode);
+                transition.outputs.forEach(highlightNode);
+
+                updatePlaces();
+
+                // Если символ сброса R, выводим результат
+                if (transition.symbol === 'R') {
+                    document.getElementById('result').textContent = `Результат: ${petriNet.getOutput()}`;
+                }
+            }
+        }
+    </script>
+</body>
+</html>
