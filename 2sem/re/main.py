@@ -1,114 +1,128 @@
-class SpellChecker:
-    def __init__(self, dictionary_path):
-        with open(dictionary_path, "r", encoding="utf-8") as file:
-            self.dictionary = set(word.strip().lower() for word in file)
-        self.dfa = DFA()
-
-    def is_word_valid(self, word):
-        """Проверяет слово с помощью DFA и словаря"""
-        if not self.dfa.is_valid_word(word):  # Проверка структуры слова
-            return False
-        return word.lower() in self.dictionary  # Проверка наличия в словаре
-
-    def calculate_levenshtein(self, word1, word2):
-        len1, len2 = len(word1), len(word2)
-        dp = [[0] * (len2 + 1) for _ in range(len1 + 1)]
-        for i in range(len1 + 1):
-            for j in range(len2 + 1):
-                if i == 0:
-                    dp[i][j] = j
-                elif j == 0:
-                    dp[i][j] = i
-                elif word1[i - 1] == word2[j - 1]:
-                    dp[i][j] = dp[i - 1][j - 1]
-                else:
-                    dp[i][j] = 1 + min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1])
-        return dp[len1][len2]
-
-    def suggest_corrections(self, word, max_suggestions=5, max_distance=3):
-        """Предлагает исправления с фильтрацией по расстоянию и длине"""
-        distances = {
-            dict_word: self.calculate_levenshtein(word.lower(), dict_word)
-            for dict_word in self.dictionary
-            if abs(len(word) - len(dict_word)) <= max_distance  # Фильтр по длине
-        }
-
-        # Оставляем только слова с расстоянием <= max_distance
-        filtered_suggestions = {
-            word: dist for word, dist in distances.items() if dist <= max_distance
-        }
-
-        # Сортируем и возвращаем топ-N
-        sorted_suggestions = sorted(
-            filtered_suggestions.items(), key=lambda x: x[1]
-        )
-        return [word for word, dist in sorted_suggestions[:max_suggestions]]
-
-    def check_text(self, text):
-        """Проверка текста с улучшенными предложениями"""
-        words = text.split()
-        errors = {}
-
-        for word in words:
-            if not self.is_word_valid(word):  # Проверяем только некорректные слова
-                suggestions = self.suggest_corrections(word)
-                errors[word] = suggestions
-
-        return errors
+import tkinter as tk
 
 
+def build_automaton(pattern):
+    pattern = pattern.lower()
+    m = len(pattern)
+    if m == 0:
+        return [{}], set()
 
-# DFA для проверки структуры слов
-class DFA:
-    def __init__(self):
-        self.states = {
-            "q0": {"alpha": "q1"},
-            "q1": {"alpha": "q1", "end": "accept"},
-        }
-        self.current_state = "q0"
-        self.accept_state = "accept"
-    
-    def reset(self):
-        self.current_state = "q0"
+    alphabet = set(pattern)
+    automaton = [{} for _ in range(m + 1)]
+    prefix = [0] * m
 
-    def transition(self, char):
-        if char.isalpha():
-            char_class = "alpha"
-        else:
-            char_class = "end"
+    j = 0
+    for i in range(1, m):
+        while j > 0 and pattern[i] != pattern[j]:
+            j = prefix[j - 1]
+        if pattern[i] == pattern[j]:
+            j += 1
+        prefix[i] = j
 
-        if char_class in self.states[self.current_state]:
-            self.current_state = self.states[self.current_state][char_class]
-        else:
-            self.current_state = None  # Некорректный символ
-    
-    def is_valid_word(self, word):
-        self.reset()
-        for char in word:
-            self.transition(char)
-            if self.current_state is None:
-                return False
-        self.transition("end")
-        return self.current_state == self.accept_state
+    for state in range(m + 1):
+        for char in alphabet:
+            if state < m and char == pattern[state]:
+                automaton[state][char] = state + 1
+            elif state > 0:
+                automaton[state][char] = automaton[prefix[state - 1]].get(char, 0)
+            else:
+                automaton[state][char] = 0
+
+    return automaton, alphabet
 
 
-# Пример использования
-if __name__ == "__main__":
-    # dictionary_path = "dictionary.txt"
-    # checker = SpellChecker(dictionary_path)
-    
-    # input_text = "apple Bananna dog elphant wrongword"
-    # errors = checker.check_text(input_text)
-    
-    dfa = DFA()
-    test_words = ["apple", "Bananna", "dog", "123wrong", "elphant"]
-    for word in test_words:
-        print(f"'{word}': {dfa.is_valid_word(word)}")
+def search_with_automaton(text, pattern):
+    text = text.lower()
+    pattern = pattern.lower()
+    if not pattern:
+        return []
+
+    automaton, _ = build_automaton(pattern)
+    state = 0
+    matches = []
+
+    for i, char in enumerate(text):
+        state = automaton[state].get(char, 0)
+        if state == len(pattern):
+            matches.append(i - len(pattern) + 1)
+
+    return matches
 
 
-    # if errors:
-    #     print("Ошибки и варианты исправления:")
-    #     for word, suggestions in errors.items():
-    #         print(f"- {word}: {', '.join(suggestions) if suggestions else 'Нет предложений'}")
-    # else:
-    #     print("Ошибок не найдено!")
+def index_to_tk_index(index, text):
+    lines = text.split("\n")
+    current_index = index
+    for line_number, line in enumerate(lines, start=1):
+        if current_index < len(line):
+            return f"{line_number}.{current_index}"
+        current_index -= len(line) + 1
+    return f"{len(lines)}.{len(lines[-1])}"
+
+
+def display_automaton_and_search():
+    text = entry_text.get("1.0", tk.END).strip()
+    pattern = entry_pattern.get().strip()
+
+    if not text or not pattern:
+        results_label.config(text="Please enter valid text and pattern.")
+        return
+
+    automaton, alphabet = build_automaton(pattern)
+    alphabet = sorted(alphabet)
+
+    for widget in frame_table.winfo_children():
+        widget.destroy()
+
+    header = ["State"] + alphabet
+    for col, header_text in enumerate(header):
+        tk.Label(frame_table, text=header_text, relief="ridge", width=10).grid(row=0, column=col)
+
+    for state, transitions in enumerate(automaton):
+        tk.Label(frame_table, text=state, relief="ridge", width=10).grid(row=state + 1, column=0)
+        for col, char in enumerate(alphabet, start=1):
+            value = transitions.get(char, 0)
+            tk.Label(frame_table, text=value, relief="ridge", width=10).grid(row=state + 1, column=col)
+
+    matches = search_with_automaton(text, pattern)
+    results_label.config(text=f"Matches found: {len(matches)}. Positions: {matches}")
+
+    entry_text.tag_remove("highlight", "1.0", tk.END)
+
+    if matches:
+        for match_start in matches:
+            match_end = match_start + len(pattern)
+            start_index = index_to_tk_index(match_start, text)
+            end_index = index_to_tk_index(match_end, text)
+            entry_text.tag_add("highlight", start_index, end_index)
+        entry_text.tag_config("highlight", background="yellow", foreground="black")
+
+
+root = tk.Tk()
+root.title("DFA for Substring Search")
+root.geometry("500x700")
+root.resizable(False, False)
+
+frame_text = tk.Frame(root)
+frame_text.pack(pady=10)
+
+tk.Label(frame_text, text="Enter the text:").pack(anchor="w", padx=5)
+entry_text = tk.Text(frame_text, height=10, width=60)
+entry_text.pack(padx=5, pady=5)
+
+frame_pattern = tk.Frame(root)
+frame_pattern.pack(pady=10)
+
+tk.Label(frame_pattern, text="Enter the pattern:").pack(anchor="w", padx=5)
+entry_pattern = tk.Entry(frame_pattern, width=40)
+entry_pattern.pack(padx=5, pady=5)
+
+button_build = tk.Button(root, text="Build DFA and Search", command=display_automaton_and_search)
+button_build.pack(pady=10)
+
+frame_table = tk.Frame(root)
+frame_table.pack(pady=10)
+
+results_label = tk.Label(root, text="Search results will be displayed here.", wraplength=480, justify="left")
+results_label.pack(pady=10)
+
+root.mainloop()
