@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Автоисправление</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background-color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    #editor {
+      width: 80%;
+      height: 90%;
+      border: none;
+      outline: none;
+      font-size: 18px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .error {
+      background-color: #ffcccc;
+    }
+
+    .tooltip {
+      position: absolute;
+      background: #f8f8f8;
+      border: 1px solid #ccc;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      display: none;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+  </style>
+</head>
+<body>
+  <div id="editor" contenteditable="true" spellcheck="false"></div>
+  <div id="tooltip" class="tooltip"></div>
+
+  <script>
+    const editor = document.getElementById("editor");
+    const tooltip = document.getElementById("tooltip");
+
+    editor.addEventListener("input", () => {
+      const cursorPosition = saveCursorPosition(editor); // Сохранение позиции курсора
+      const text = editor.innerText;
+      const errors = checkTextWithFiniteAutomaton(text);
+      highlightErrors(errors);
+      restoreCursorPosition(editor, cursorPosition); // Восстановление позиции курсора
+    });
+
+    editor.addEventListener("mouseover", (event) => {
+      if (event.target.classList.contains("error")) {
+        tooltip.innerText = event.target.getAttribute("data-error");
+        tooltip.style.display = "block";
+        tooltip.style.top = `${event.pageY + 5}px`;
+        tooltip.style.left = `${event.pageX + 5}px`;
+      }
+    });
+
+    editor.addEventListener("mouseout", () => {
+      tooltip.style.display = "none";
+    });
+
+    // Конечный автомат для проверки текста
+    function checkTextWithFiniteAutomaton(text) {
+  const errors = [];
+  const sentences = text.split(/[.!?]/).filter(Boolean); // Разделяем на предложения
+
+  sentences.forEach((sentence, sentenceIndex) => {
+    const words = sentence.trim().split(/\s+/);
+
+    // Проверка на заглавную букву в начале предложения
+    if (words.length > 0 && !/^[A-ZА-Я]/.test(words[0])) {
+      errors.push({
+        word: words[0],
+        sentenceIndex,
+        error: "Предложение должно начинаться с заглавной буквы.",
+      });
+    }
+
+    // Проверка пробела между заглавной буквой и знаком препинания
+    for (let i = 0; i < sentence.length - 1; i++) {
+      const currentChar = sentence[i];
+      const nextChar = sentence[i + 1];
+
+      // Если текущий символ — заглавная буква, а следующий — знак препинания
+      if (/[A-ZА-Я]/.test(currentChar) && /[.,!?]/.test(nextChar)) {
+        errors.push({
+          word: `${currentChar}${nextChar}`, // Неправильная комбинация
+          sentenceIndex,
+          error: "Пропущен пробел между заглавной буквой и знаком препинания.",
+        });
+      }
+    }
+  });
+
+  return errors;
+}
+
+
+    // Выделение ошибок в редакторе
+    function highlightErrors(errors) {
+      const text = editor.innerText;
+      const words = text.split(/\s+/);
+      editor.innerHTML = words
+        .map((word, index) => {
+          const error = errors.find((e) => e.word === word);
+          if (error) {
+            return `<span class="error" data-error="${error.error}">${word}</span>`;
+          }
+          return word;
+        })
+        .join(" ");
+    }
+
+    // Сохранение позиции курсора
+    function saveCursorPosition(element) {
+      const selection = window.getSelection();
+      if (!selection.rangeCount) return null;
+
+      const range = selection.getRangeAt(0);
+      const preRange = range.cloneRange();
+      preRange.selectNodeContents(element);
+      preRange.setEnd(range.startContainer, range.startOffset);
+
+      const position = preRange.toString().length; // Длина текста до курсора
+      return position;
+    }
+
+    // Восстановление позиции курсора
+    function restoreCursorPosition(element, position) {
+      if (position === null) return;
+
+      const selection = window.getSelection();
+      const range = document.createRange();
+
+      let charIndex = 0;
+      let found = false;
+
+      function traverseNodes(node) {
+        if (found) return;
+
+        if (node.nodeType === Node.TEXT_NODE) {
+          const nextCharIndex = charIndex + node.length;
+          if (position >= charIndex && position <= nextCharIndex) {
+            range.setStart(node, position - charIndex);
+            range.collapse(true);
+            found = true;
+          }
+          charIndex = nextCharIndex;
+        } else {
+          node.childNodes.forEach(traverseNodes);
+        }
+      }
+
+      traverseNodes(element);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
+  </script>
+</body>
+</html>
