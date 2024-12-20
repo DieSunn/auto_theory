@@ -50,7 +50,8 @@
 <body>
   <div id="editor" contenteditable="true" spellcheck="false"></div>
   <div id="tooltip" class="tooltip"></div>
-
+  <button id="checkWords">Проверить</button>
+  <div id="popup" style="display: none; position: absolute; background: white; border: 1px solid black; padding: 10px; z-index: 100;"></div>
   <script>
     const editor = document.getElementById("editor");
     const tooltip = document.getElementById("tooltip");
@@ -58,8 +59,9 @@
     editor.addEventListener("input", () => {
       const cursorPosition = saveCursorPosition(editor);
       const text = editor.innerText;
-      const errors = checkTextWithFiniteAutomaton(text);
-      wrapWordsInSpans(errors, text);
+      wrapWordsInSpans(text);
+      const spans = collectSpans();
+      const errors = checkTextWithFiniteAutomaton(spans);
       restoreCursorPosition(editor, cursorPosition);
     });
 
@@ -76,94 +78,84 @@
       tooltip.style.display = "none";
     });
 
-    function checkTextWithFiniteAutomaton(text) {
-      const errors = [];
-      const sentences = text.split(/(?<=[.!?])\s+/).filter(Boolean);
-
-      sentences.forEach((sentence, sentenceIndex) => {
-        const words = sentence.trim().split(/\s+/);
-
-        if (words.length > 0 && /^[a-zа-я]/.test(words[0])) {
-          errors.push({
-            word: words[0],
-            index: text.indexOf(words[0]),
-            error: "Предложение начинается с маленькой буквы.",
-            type: "highlight-green"
-          });
-        }
-
-        const punctuationErrors = [...sentence.matchAll(/\w(\s?)([.,!?])/g)];
-        punctuationErrors.forEach(([match, space, punctuation]) => {
-          if (space !== " ") {
-            const index = text.indexOf(match);
-            errors.push({
-              word: match,
-              index,
-              error: "Пропущен пробел перед знаком препинания.",
-              type: "error"
-            });
-          }
-        });
-
-        const spaceErrors = [...sentence.matchAll(/([.,!?])(\S)/g)];
-        spaceErrors.forEach(([match, punctuation, nextChar]) => {
-          if (nextChar && !/\s/.test(nextChar)) {
-            const index = text.indexOf(match);
-            errors.push({
-              word: match,
-              index,
-              error: "Отсутствует пробел после знака препинания.",
-              type: "error"
-            });
-          }
-        });
-
-        const invalidSpacePatterns = [...sentence.matchAll(/(\s?\.(?!\s)|\s\.)/g)];
-        invalidSpacePatterns.forEach(([match]) => {
-          const index = text.indexOf(match);
-          errors.push({
-            word: match,
-            index,
-            error: "Некорректное использование пробелов вокруг точки.",
-            type: "error"
-          });
-        });
-
-        words.forEach((word) => {
-          if (!/^[a-zA-Zа-яА-Я]+$/.test(word)) {
-            const index = text.indexOf(word);
-            errors.push({
-              word,
-              index,
-              error: "Неверное слово. Разрешены только буквы.",
-              type: "error"
-            });
-          }
-        });
-      });
-
-      return errors;
-    }
-
-    function wrapWordsInSpans(errors, text) {
+    function wrapWordsInSpans(text) {
       const wordsAndPunctuation = text.split(/(\s*[.,!?]\s*|\s+)/).filter(Boolean);
       let wrappedText = "";
+      let wordCounter = 0;
+      let spanCounter = 0;
 
       wordsAndPunctuation.forEach((part) => {
         if (/^\s*[.,!?]\s*$/.test(part) || /^\s+$/.test(part)) {
-          wrappedText += `<span>${part}</span>`; // Wrap combined punctuation and spaces
+          const spaceId = `space_${spanCounter++}`;
+          wrappedText += `<span id="${spaceId}">${part}</span>`;
         } else if (part.trim().length > 0) {
-          const error = errors.find((err) => err.word === part);
-          if (error) {
-            wrappedText += `<span class="${error.type}" data-error="${error.error}">${part}</span>`;
-          } else {
-            wrappedText += `<span>${part}</span>`;
-          }
+          const wordId = `word_${wordCounter++}`;
+          wrappedText += `<span id="${wordId}">${part}</span>`;
         }
       });
 
       editor.innerHTML = wrappedText;
     }
+
+    function collectSpans() {
+      const spanElements = document.querySelectorAll('span');
+      const spans = Array.from(spanElements).map(span => ({
+        id: span.id,
+        text: span.textContent,
+        type: span.getAttribute('data-error') ? 'error' : 'normal'
+      }));
+      return spans;
+    }
+
+function checkTextWithFiniteAutomaton(text) {
+  const spans = document.querySelectorAll('span');
+  let isFirstWord = true;
+  
+  spans.forEach((span, index) => {
+    if (span.id.startsWith('word_')) {
+      const word = span.textContent;
+      if (isFirstWord) {
+        if (/^[a-zа-я]/.test(word)) {
+          span.classList.add('highlight-green');
+          span.setAttribute('data-error', 'Предложение начинается с маленькой буквы');
+        } else {
+          span.classList.remove('highlight-green');
+          span.removeAttribute('data-error');
+        }
+        isFirstWord = false;
+      }
+      
+      // Проверка пробела перед знаком препинания
+      const nextSpan = spans[index + 1];
+      if (nextSpan && nextSpan.id.startsWith('space_')) {
+        if (/\s+[.,!?]/.test(nextSpan.textContent)) {
+          span.classList.add('highlight-green');
+          nextSpan.classList.add('highlight-green');
+          span.setAttribute('data-error', 'Лишний пробел перед знаком препинания');
+          nextSpan.setAttribute('data-error', 'Лишний пробел перед знаком препинания');
+        }
+      }
+    } else if (span.id.startsWith('space_')) {
+      // Проверяем, содержит ли пробельный span знаки конца предложения
+      if (/[.!?]/.test(span.textContent)) {
+        isFirstWord = true;
+      }
+
+      // Проверка отсутствия пробела после знака препинания
+      const nextSpan = spans[index + 1];
+      if (nextSpan && nextSpan.id.startsWith('word_')) {
+        if (/[.,!?]\S*$/.test(span.textContent)) {
+          span.classList.add('highlight-green');
+          nextSpan.classList.add('highlight-green');
+          span.setAttribute('data-error', 'Отсутствует пробел после знака препинания');
+          nextSpan.setAttribute('data-error', 'Отсутствует пробел после знака препинания');
+        }
+      }
+    }
+  });
+}
+
+
 
     function saveCursorPosition(element) {
       const selection = window.getSelection();
@@ -206,7 +198,129 @@
       traverseNodes(element);
       selection.removeAllRanges();
       selection.addRange(range);
+
+    function collectWords() {
+      const spans = document.querySelectorAll('span[id^="word_"]');
+      const wordsDictionary = {};
+
+      spans.forEach((span) => {
+        const id = span.id;
+        const word = span.textContent.trim();
+        wordsDictionary[id] = word;
+      });
+
     }
+
+// Пример вызова функции для проверки
+collectWords();
+
+    }
+
+// Функция отправки данных на сервер
+async function sendWordsToServer(wordsDictionary) {
+  try {
+    const response = await fetch('http://localhost:5000/receive-words', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ words: wordsDictionary }),
+    });
+
+    const result = await response.json();
+    console.log('Response from server:', result);
+    processServerResponse(result);
+  } catch (error) {
+    console.error('Error sending data to server:', error);
+  }
+}
+
+// Функция сбора слов со страницы и отправки на сервер
+function collectWordsAndSend() {
+  const spans = document.querySelectorAll('span[id^="word_"]');
+  const wordsDictionary = {};
+
+  spans.forEach((span) => {
+    const id = span.id;
+    const word = span.textContent.trim();
+    wordsDictionary[id] = word;
+  });
+
+  console.log('Sending words:', wordsDictionary);
+  sendWordsToServer(wordsDictionary);
+}
+
+// Обработка ответа от сервера
+function processServerResponse(response) {
+  if (response.status === "error") {
+    const suggestions = response.suggestions;
+
+    for (const wordId in suggestions) {
+      const span = document.getElementById(wordId);
+      if (span) {
+        span.style.color = "red";
+        span.style.borderBottom = "1px dashed red";
+
+        // Добавляем обработчик для показа pop-up
+        span.addEventListener("mouseover", (event) => {
+          showPopup(event, span, suggestions[wordId]);
+        });
+      }
+    }
+  }
+}
+
+// Функция показа pop-up
+function showPopup(event, span, suggestions) {
+  const popup = document.getElementById("popup");
+
+  // Очищаем содержимое pop-up
+  popup.innerHTML = "";
+
+  // Добавляем варианты замены
+  suggestions.forEach((suggestion) => {
+    const suggestionElement = document.createElement("div");
+    suggestionElement.textContent = suggestion;
+    suggestionElement.style.cursor = "pointer";
+    suggestionElement.style.padding = "5px";
+    suggestionElement.addEventListener("click", () => {
+      span.textContent = suggestion; // Меняем текст в span
+      hidePopup(); // Скрываем pop-up
+      span.style.color = ""; // Убираем подсветку
+      span.style.borderBottom = "";
+    });
+    popup.appendChild(suggestionElement);
+  });
+
+  // Позиционируем и показываем pop-up
+  const rect = span.getBoundingClientRect();
+  popup.style.left = `${rect.left + window.scrollX}px`;
+  popup.style.top = `${rect.bottom + window.scrollY}px`;
+  popup.style.display = "block";
+
+  // Добавляем глобальный обработчик для клика вне pop-up
+  document.addEventListener("click", outsideClickListener);
+}
+
+// Функция скрытия pop-up
+function hidePopup() {
+  const popup = document.getElementById("popup");
+  popup.style.display = "none";
+
+  // Удаляем обработчик клика вне pop-up
+  document.removeEventListener("click", outsideClickListener);
+}
+
+// Обработчик клика вне pop-up
+function outsideClickListener(event) {
+  const popup = document.getElementById("popup");
+  if (!popup.contains(event.target)) {
+    hidePopup();
+  }
+}
+
+// Обработчик кнопки для проверки слов
+document.getElementById("checkWords").addEventListener("click", collectWordsAndSend);
   </script>
 </body>
 </html>
