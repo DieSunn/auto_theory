@@ -25,6 +25,8 @@
       line-height: 1.6;
       white-space: pre-wrap;
       word-wrap: break-word;
+      background-color: #f5f5f5;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     }
 
     .error {
@@ -107,50 +109,74 @@
       return spans;
     }
 
-function checkTextWithFiniteAutomaton(text) {
-  const spans = document.querySelectorAll('span');
-  let isFirstWord = true;
-  
-  spans.forEach((span, index) => {
-    if (span.id.startsWith('word_')) {
-      const word = span.textContent;
-      if (isFirstWord) {
-        if (/^[a-zа-я]/.test(word)) {
-          span.classList.add('highlight-green');
-          span.setAttribute('data-error', 'Предложение начинается с маленькой буквы');
-        } else {
-          span.classList.remove('highlight-green');
-          span.removeAttribute('data-error');
-        }
-        isFirstWord = false;
-      }
-      
-      // Проверка пробела перед знаком препинания
-      const nextSpan = spans[index + 1];
-      if (nextSpan && nextSpan.id.startsWith('space_')) {
-        if (/\s+[.,!?]/.test(nextSpan.textContent)) {
-          span.classList.add('highlight-green');
-          nextSpan.classList.add('highlight-green');
-          span.setAttribute('data-error', 'Лишний пробел перед знаком препинания');
-          nextSpan.setAttribute('data-error', 'Лишний пробел перед знаком препинания');
-        }
-      }
-    } else if (span.id.startsWith('space_')) {
-      // Проверяем, содержит ли пробельный span знаки конца предложения
-      if (/[.!?]/.test(span.textContent)) {
-        isFirstWord = true;
-      }
+function checkTextWithFiniteAutomaton(spans) {
+  const states = {
+    START: 0,
+    WORD: 1,
+    PUNCTUATION: 2,
+    SPACE: 3
+  };
 
-      // Проверка отсутствия пробела после знака препинания
-      const nextSpan = spans[index + 1];
-      if (nextSpan && nextSpan.id.startsWith('word_')) {
-        if (/[.,!?]\S*$/.test(span.textContent)) {
-          span.classList.add('highlight-green');
-          nextSpan.classList.add('highlight-green');
-          span.setAttribute('data-error', 'Отсутствует пробел после знака препинания');
-          nextSpan.setAttribute('data-error', 'Отсутствует пробел после знака препинания');
+  let currentState = states.START;
+  let isFirstWord = true;
+  let consecutiveSpaces = 0;
+  let lastSpaceId = null;
+
+  spans.forEach((span, index) => {
+    const nextSpan = spans[index + 1];
+    const text = span.text;
+    switch (currentState) {
+      case states.START:
+      case states.PUNCTUATION:
+        if (span.id.startsWith('word_')) {
+          if (isFirstWord && !/^[A-ZА-Я]/.test(text)) {
+            document.getElementById(span.id).classList.add('error');
+            document.getElementById(span.id).setAttribute('data-error', 'Предложение должно начинаться с заглавной буквы');
+          }
+          isFirstWord = false;
+          currentState = states.WORD;
+          consecutiveSpaces = 0;
         }
-      }
+        console.log(currentState);
+        break;
+
+      case states.WORD:
+        if (span.id.startsWith('space_')) {
+          if (/\s+[.,!?]/.test(text)) {
+            document.getElementById(span.id).classList.add('highlight-green');
+            document.getElementById(span.id).setAttribute('data-error', 'Лишний пробел перед знаком препинания');
+          }
+          if (text.trim() === '') {
+            consecutiveSpaces++;
+            lastSpaceId = span.id;
+            if (consecutiveSpaces > 1) {
+              document.getElementById(span.id).classList.add('highlight-green');
+              document.getElementById(span.id).setAttribute('data-error', 'Несколько пробелов подряд');
+            }
+          }
+          if (/[.!?]/.test(text)) {
+            isFirstWord = true;
+            currentState = states.PUNCTUATION;
+          } else {
+            currentState = states.SPACE;
+          }
+        }
+        console.log(currentState);
+        break;
+
+      case states.SPACE:
+        if (span.id.startsWith('space_')) {
+          const prevSpan = span.id;
+          console.log(span.id);
+          if (/[.,!?]/.test(prevSpan)) {
+            document.getElementById(span.id).classList.add('highlight-green');
+            document.getElementById(span.id).setAttribute('data-error', 'Отсутствует пробел после знака препинания');
+          }
+          currentState = states.WORD;
+          consecutiveSpaces = 0;
+        }
+        console.log(currentState);
+        break;
     }
   });
 }
